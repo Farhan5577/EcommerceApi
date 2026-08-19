@@ -96,3 +96,21 @@ Create or update the `appsettings.json` file in the root directory:
     "ApiSecret": "YOUR_API_SECRET"
   }
 }
+```
+Running the Project
+Clone the repository:
+```
+git clone https://github.com/Farhan5577/EcommerceApi
+cd EcommerceApi
+dotnet restore
+```
+Apply Database Migrations:
+```
+dotnet af database update
+```
+Run Project:
+```
+dotnet run
+```
+📄 License
+This project is open-source and available for educational and portfolio purposes.
