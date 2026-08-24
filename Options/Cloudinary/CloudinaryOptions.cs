@@ -1,4 +1,4 @@
-﻿namespace EcommerceApi.Options
+﻿namespace EcommerceApi.Options.Cloudinary
 {
     public sealed class CloudinaryOptions
     {

@@ -4,6 +4,7 @@ using EcommerceApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.Xml;
 using EcommerceApi.Service.Interface;
+using EcommerceApi.Options.Exceptions;
 namespace EcommerceApi.Service
 {
     public sealed class ProductService (AppDbContext _context, IPhotoService photoService):IProductService
@@ -12,18 +13,13 @@ namespace EcommerceApi.Service
         {
             var store = await _context.Stores.FirstOrDefaultAsync(a => a.UserId == UserId);
             if (store == null)
-                throw new Exception("You must have a store first. ");
+                throw new NotFoundException("You must have a store first. ");
 
             string photoUrl = "https://via.placeholder.com/150";
 
             if(dto.PhotoFile != null)
             {
                 var uploadResult = await photoService.AddPhoto(dto.PhotoFile);
-                if(uploadResult.Error != null)
-                {
-                    throw new Exception(uploadResult.Error.Message);
-                }
-
                 photoUrl = uploadResult.SecureUrl.ToString();
             }
 
@@ -45,16 +41,31 @@ namespace EcommerceApi.Service
             return (MapToResponseDto(product));
         }
 
-        public async Task<List<ProductResponseDto>> GetAllProduct()
+        public async Task<List<ProductResponseDto>> GetAllProduct(string? search, string? sortBy, int pageNumber = 1, int pageSize = 10)
         {
-            var product = await _context.Products.ToListAsync();
+            var query = _context.Products.AsQueryable();
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(p => p.Name.ToLower().Contains(search.ToLower()));
+            }
+
+            query = sortBy.ToLower() switch
+            {
+                "price_asc" => query.OrderBy(p => p.Price),
+                "price_desc" => query.OrderByDescending(p => p.Price),
+                "oldest" => query.OrderBy(p => p.CreatAt),
+                _        => query.OrderByDescending(p => p.CreatAt)
+            };
+
+
+            var product = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
             return product.Select(p => MapToResponseDto(p)).ToList();
         }
 
-        public async Task<ProductResponseDto?> GetAllProductById(Guid ProductID)
+        public async Task<ProductResponseDto> GetAllProductById(Guid ProductID)
         {
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == ProductID);
-            if (product == null) return null;
+            if (product == null) throw new NotFoundException("Product not found");
 
             return MapToResponseDto(product);
         }
@@ -62,10 +73,10 @@ namespace EcommerceApi.Service
         public async Task<ProductResponseDto> UpdateProduct(Guid productId, ModProductDto dto, Guid UserId)
         {
             var store = await _context.Stores.FirstOrDefaultAsync(p => p.UserId == UserId);
-            if (store == null) throw new Exception("User dont know");
+            if (store == null) throw new NotFoundException("User dont know");
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == store.Id);
-            if (product == null) throw new Exception("Product not found");
+            if (product == null) throw new NotFoundException("Product not found");
 
             if(!string.IsNullOrEmpty(dto.Name)) product.Name = dto.Name;
             if(!string.IsNullOrEmpty(dto.Description)) product.Description = dto.Description;
@@ -79,10 +90,10 @@ namespace EcommerceApi.Service
         public async Task<bool> DeleteProduct(Guid productId, Guid UserId)
         {
             var store = await _context.Stores.FirstOrDefaultAsync(p => p.UserId == UserId);
-            if (store == null) return false;
+            if (store == null) throw new NotFoundException("Store not found");
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == store.Id);
-            if (product == null) return false;
+            if (product == null) throw new NotFoundException("Product not match with you store");
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();

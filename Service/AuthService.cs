@@ -2,11 +2,11 @@
 using EcommerceApi.Models;
 using EcommerceApi.Service.Interface;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using EcommerceApi.Options.Exceptions;
 
 namespace EcommerceApi.Service
 {
@@ -18,7 +18,7 @@ namespace EcommerceApi.Service
             var userExists = await _userManager.FindByEmailAsync(dto.Email);
             if (userExists != null)
             {
-                throw new Exception("Email is already registered.");
+                throw new ConflictException("Email is already registered.");
             }
 
             var user = new UserModel
@@ -35,7 +35,7 @@ namespace EcommerceApi.Service
             if (!result.Succeeded)
             {
                 var errors = string.Join(".", result.Errors.Select(e => e.Description));
-                throw new Exception($"Gagal mendaftar : {errors}");
+                throw new BadRequestException($"Gagal mendaftar : {errors}");
             }
 
             return "Registration successful.";
@@ -46,7 +46,7 @@ namespace EcommerceApi.Service
             var user = await _userManager.FindByEmailAsync(dto.Email);
 
             if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
-                throw new Exception("Incorrect email or password.");
+                throw new BadRequestException("Incorrect email or password.");
 
             return GenerateJwtToken(user);
         }

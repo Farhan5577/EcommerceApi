@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using EcommerceApi.Options.Exceptions;
 
 namespace EcommerceApi.Controllers
 {
@@ -13,9 +14,9 @@ namespace EcommerceApi.Controllers
     public sealed class ProductController(IProductService productService) : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] string? sortBy, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var products = await productService.GetAllProduct();
+            var products = await productService.GetAllProduct(search, sortBy, pageNumber, pageSize);
             return Ok(products);
         }
 
@@ -30,34 +31,20 @@ namespace EcommerceApi.Controllers
         [Authorize]
         public async Task<IActionResult> Create([FromForm] ProductDto dto)
         {
-            try
-            {
-                var UserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-                var result = await productService.CreateProduct(dto, UserId);
+            var UserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await productService.CreateProduct(dto, UserId);
 
-                return Ok(new { Message = "Product successfully added!", Data = result });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            return Ok(new { Message = "Product successfully added!", Data = result });
         }
 
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromForm] ModProductDto dto )
         {
-            try
-            {
-                var userID = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-                var result = await productService.UpdateProduct(id, dto, userID);
+            var userID = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await productService.UpdateProduct(id, dto, userID);
 
-                return Ok(new { Message = "Product Successfully Update!", Data = result });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            return Ok(new { Message = "Product Successfully Update!", Data = result });
         }
 
         [HttpDelete("{id}")]
@@ -71,7 +58,5 @@ namespace EcommerceApi.Controllers
 
             return Ok(new {Message = "Product successfully deleted." });
         }
-
-        
     }
 }

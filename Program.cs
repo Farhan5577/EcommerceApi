@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using EcommerceApi.Service.Interface;
-using EcommerceApi.Options;
 using CloudinaryDotNet;
+using EcommerceApi.Options.Cloudinary;
+using EcommerceApi.Options.Exceptions;
 var builder = WebApplication.CreateBuilder(args);
 var JwtSecret = builder.Configuration["Jwt:SecretKey"] ?? "SuperSecretDefaultKeyqwertyuiopasdfghjklz";
 
@@ -41,6 +42,8 @@ builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.AddExceptionHandler<ExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection("CloudinarySetting"));
 
 // Add services to the container.
@@ -82,6 +85,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

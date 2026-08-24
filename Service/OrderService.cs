@@ -3,6 +3,8 @@ using EcommerceApi.DTOs;
 using EcommerceApi.Models;
 using EcommerceApi.Service.Interface;
 using Microsoft.EntityFrameworkCore;
+using EcommerceApi.Options.Exceptions;
+
 namespace EcommerceApi.Service
 {
     public class OrderService(AppDbContext _context) : IOrderService
@@ -27,9 +29,9 @@ namespace EcommerceApi.Service
                 foreach (var item in dto.Items)
                 {
                     var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
-                    if (product == null) throw new Exception("Product not found");
+                    if (product == null) throw new NotFoundException("Product not found");
 
-                    if (product.Stock < item.Quantity) throw new Exception($"Stock {product.Name} not enough");
+                    if (product.Stock < item.Quantity) throw new BadRequestException($"Stock {product.Name} not enough");
 
                     product.Stock -= item.Quantity;
 
@@ -70,10 +72,10 @@ namespace EcommerceApi.Service
             return orders.Select(o => MapToOrderResponseDto(o)).ToList();
         }
 
-        public async Task<OrderResponseDto?> GetOrderById(Guid OrderId, Guid UserId)
+        public async Task<OrderResponseDto> GetOrderById(Guid OrderId, Guid UserId)
         {
             var orders = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).FirstOrDefaultAsync(o => o.Id == OrderId && o.UserId == UserId);
-            if (orders == null) return null;
+            if (orders == null) throw new NotFoundException($"Order with Id : {OrderId} Not Found1");
 
             return MapToOrderResponseDto(orders);
         }
@@ -81,10 +83,10 @@ namespace EcommerceApi.Service
         public async Task<OrderResponseDto> UpdateOrderStatus(Guid orderId,UpdateOrderDto dto,Guid userId)
         {
             var store = await _context.Stores.FirstOrDefaultAsync(p => p.UserId == userId);
-            if (store == null) throw new Exception("You do not have a store.");
+            if (store == null) throw new NotFoundException("You do not have a store.");
 
             var order = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).FirstOrDefaultAsync(o => o.Id == orderId && o.OrderItems.Any(oi => oi.Product.StoreId == store.Id));
-            if (order == null) throw new Exception("Order not found or does not belong to your store!");
+            if (order == null) throw new ForbiddenException("Order not found or does not belong to your store!");
 
             order.Status = dto.Status;
             await _context.SaveChangesAsync();

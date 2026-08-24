@@ -3,6 +3,7 @@ using EcommerceApi.DTOs;
 using EcommerceApi.Models;
 using EcommerceApi.Service.Interface;
 using Microsoft.EntityFrameworkCore;
+using EcommerceApi.Options.Exceptions;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 
@@ -14,7 +15,7 @@ namespace EcommerceApi.Service
         {
             var exitingStore = await _context.Stores.FirstOrDefaultAsync (s => s.UserId == UserId);
             if (exitingStore != null)
-                throw new Exception("User have ready store!");
+                throw new ConflictException("User already has a store!");
 
             var store = new StoreModel
             {
@@ -42,7 +43,7 @@ namespace EcommerceApi.Service
         public async Task<StoreResponseDto?> GetStoreByUserId(Guid userId)
         {
             var store = await _context.Stores.FirstOrDefaultAsync(s => s.UserId == userId);
-            if (store == null) return null;
+            if (store == null) throw new NotFoundException("Store not found!");
 
             return new StoreResponseDto
             {
@@ -57,7 +58,7 @@ namespace EcommerceApi.Service
         public async Task<StoreResponseDto?> GetStoreById (Guid storeId)
         {
             var store = await _context.Stores.FirstOrDefaultAsync(s => s.Id == storeId);
-            if (store == null) return null;
+            if (store == null) throw new NotFoundException($"Store with Id {storeId} Not Found!");
 
             return new StoreResponseDto
             {
