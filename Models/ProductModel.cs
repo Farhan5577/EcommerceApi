@@ -11,7 +11,7 @@
         public required string PhotoUrl { get; set; }
         public string? PhotoPublicId { get; set; }
         public bool IsActive { get; set; } = true;
-        public DateTime CreatAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public StoreModel? Store { get; set; } = null!;
 
 

@@ -19,7 +19,7 @@ namespace EcommerceApi.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var token = await _authService.LoginAsync(dto);
+            var token = await _authService.Login(dto);
             return Ok(new { Token = token, Message = "Login successful!" });
         }
     }

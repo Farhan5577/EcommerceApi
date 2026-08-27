@@ -10,7 +10,7 @@ namespace EcommerceApi.Models
         public string? LogoUrl { get; set; }
         public string? LogoPublicId { get; set; }
         public required string Role { get; set; }
-        public DateTime CreatAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         public ICollection<OrderModel> Orders { get; set; } = new List<OrderModel>();
         public StoreModel? Store { get; set; }

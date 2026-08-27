@@ -1,17 +1,18 @@
 using EcommerceApi.Data;
 using EcommerceApi.Models;
+using EcommerceApi.Service;
+using EcommerceApi.Options.Cloudinary;
+using EcommerceApi.Service.Interface;
+using EcommerceApi.Options.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using EcommerceApi.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using EcommerceApi.Service.Interface;
 using CloudinaryDotNet;
-using EcommerceApi.Options.Cloudinary;
-using EcommerceApi.Options.Exceptions;
+
 var builder = WebApplication.CreateBuilder(args);
 var JwtSecret = builder.Configuration["Jwt:SecretKey"] ?? "SuperSecretDefaultKeyqwertyuiopasdfghjklz";
 
@@ -33,10 +34,18 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Allow", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://localhost:5137").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    });
+});
+
 builder.Services.AddDbContext<AppDbContext>(options 
     => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentityCore<UserModel>(options 
-    => { options.User.RequireUniqueEmail = true; }).AddEntityFrameworkStores<AppDbContext>();
+    => { options.User.RequireUniqueEmail = true; }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -58,7 +67,7 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
+        Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
@@ -85,13 +94,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
-app.UseExceptionHandler();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

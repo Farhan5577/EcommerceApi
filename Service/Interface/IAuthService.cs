@@ -4,7 +4,7 @@ namespace EcommerceApi.Service.Interface
 {
     public interface IAuthService
     {
-        Task<string> Register(RegisterDto dto);
-        Task<string> LoginAsync(LoginDto dto);
+        Task<RegisterDto> Register(RegisterDto dto);
+        Task<string> Login(LoginDto dto);
     }
 }

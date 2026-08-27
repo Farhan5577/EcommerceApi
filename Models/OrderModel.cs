@@ -4,7 +4,7 @@
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public DateTime OrderTime { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset OrderTime { get; set; } = DateTimeOffset.UtcNow;
         public decimal TotalAmount { get; set; } 
         public required string Status { get; set; }
         public string? ShippingAddress { get; set; }

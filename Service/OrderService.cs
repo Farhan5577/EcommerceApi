@@ -18,7 +18,7 @@ namespace EcommerceApi.Service
                 {
                     Id = Guid.NewGuid(),
                     UserId = UserId,
-                    OrderTime = DateTime.UtcNow,
+                    OrderTime = DateTimeOffset.UtcNow,
                     Status = "Pending!",
                     ShippingAddress =  dto.ShippingAddress ?? "",
                     TotalAmount = 0,  
@@ -74,7 +74,7 @@ namespace EcommerceApi.Service
 
         public async Task<OrderResponseDto> GetOrderById(Guid OrderId, Guid UserId)
         {
-            var orders = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).FirstOrDefaultAsync(o => o.Id == OrderId && o.UserId == UserId);
+            var orders = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).ThenInclude(oa => oa.Store).FirstOrDefaultAsync(o => o.Id == OrderId && o.UserId == UserId);
             if (orders == null) throw new NotFoundException($"Order with Id : {OrderId} Not Found1");
 
             return MapToOrderResponseDto(orders);

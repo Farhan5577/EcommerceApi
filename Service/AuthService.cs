@@ -13,7 +13,7 @@ namespace EcommerceApi.Service
     public sealed class AuthService(UserManager<UserModel> _userManager, IConfiguration _configuration) : IAuthService
     {
 
-        public async Task<string> Register(RegisterDto dto)
+        public async Task<RegisterDto> Register(RegisterDto dto)
         {
             var userExists = await _userManager.FindByEmailAsync(dto.Email);
             if (userExists != null)
@@ -25,9 +25,8 @@ namespace EcommerceApi.Service
             {
                 Email = dto.Email,
                 Name = dto.UserName,
-                SecurityStamp = Guid.NewGuid().ToString(),
                 UserName = dto.UserName,
-                Role = "Costumer"
+                Role = "customer"
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -35,13 +34,13 @@ namespace EcommerceApi.Service
             if (!result.Succeeded)
             {
                 var errors = string.Join(".", result.Errors.Select(e => e.Description));
-                throw new BadRequestException($"Gagal mendaftar : {errors}");
+                throw new BadRequestException($"Failed to register : {errors}");
             }
 
-            return "Registration successful.";
+            return dto;
         }
 
-        public async Task<string> LoginAsync(LoginDto dto)
+        public async Task<string> Login(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
 

@@ -32,7 +32,7 @@ namespace EcommerceApi.Service
                 Stock = dto.Stock,
                 PhotoUrl = photoUrl,
                 StoreId = store.Id,
-                CreatAt = DateTime.UtcNow,
+                CreatedAt = DateTimeOffset.UtcNow,
             };
 
             _context.Products.Add(product);
@@ -53,8 +53,8 @@ namespace EcommerceApi.Service
             {
                 "price_asc" => query.OrderBy(p => p.Price),
                 "price_desc" => query.OrderByDescending(p => p.Price),
-                "oldest" => query.OrderBy(p => p.CreatAt),
-                _        => query.OrderByDescending(p => p.CreatAt)
+                "oldest" => query.OrderBy(p => p.CreatedAt),
+                _        => query.OrderByDescending(p => p.CreatedAt)
             };
 
 
