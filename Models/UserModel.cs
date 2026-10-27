@@ -12,6 +12,9 @@ namespace EcommerceApi.Models
         public required string Role { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+        public string? RefreshToken { get; set; }
+        public DateTimeOffset? RefreshTokenExpiryTime { get; set; }
+
         public ICollection<OrderModel> Orders { get; set; } = new List<OrderModel>();
         public StoreModel? Store { get; set; }
 

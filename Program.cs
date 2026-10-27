@@ -28,7 +28,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "EcommerceApi",
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "EcommerceUser",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret)),
+        ClockSkew = TimeSpan.Zero
     };
 });
 builder.Services.AddCors(options =>

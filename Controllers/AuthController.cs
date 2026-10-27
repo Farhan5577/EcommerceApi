@@ -22,5 +22,12 @@ namespace EcommerceApi.Controllers
             var token = await _authService.Login(dto);
             return Ok(new { Token = token, Message = "Login successful!" });
         }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] TokenDto dto)
+        {
+            var result = await _authService.RefreshToken(dto);
+            return Ok(result);
+        }
     }
 }

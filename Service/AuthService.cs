@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using EcommerceApi.Options.Exceptions;
+using System.Security.Cryptography;
+using EcommerceApi.Migrations;
 
 namespace EcommerceApi.Service
 {
@@ -40,14 +42,56 @@ namespace EcommerceApi.Service
             return dto;
         }
 
-        public async Task<string> Login(LoginDto dto)
+        public async Task<ResponseToken> Login(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
 
             if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
                 throw new BadRequestException("Incorrect email or password.");
 
-            return GenerateJwtToken(user);
+            var accessToken = GenerateJwtToken(user);
+            var refreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTimeOffset.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
+            return new ResponseToken
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                RefreshTokenExpiration = user.RefreshTokenExpiryTime.Value
+            };
+        }
+
+        public async Task <ResponseToken> RefreshToken(TokenDto dto)
+        {
+            var principal = GetPrincipalFromExperiedToken(dto.AccsessToken);
+            if (principal == null)
+                throw new BadRequestException("Invalid access token");
+
+            var userIdClaim = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim))
+                throw new BadRequestException("Invalid token claims");
+
+            var user = await _userManager.FindByIdAsync(userIdClaim);
+
+            if (user == null || user.RefreshToken != dto.RefreshToken || user.RefreshTokenExpiryTime <= DateTimeOffset.UtcNow)
+                throw new BadRequestException("Invalid or expired refresh token");
+
+            var newAccessToken = GenerateJwtToken(user);
+            var newRefreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTimeOffset.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
+            return new ResponseToken
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+                RefreshTokenExpiration = user.RefreshTokenExpiryTime.Value
+            };
         }
 
         private string GenerateJwtToken(UserModel user)
@@ -57,6 +101,7 @@ namespace EcommerceApi.Service
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email!),
                 new Claim(ClaimTypes.Name, user.Name!),
+                new Claim(ClaimTypes.Role, user.Role!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
@@ -66,13 +111,44 @@ namespace EcommerceApi.Service
             var token = new JwtSecurityToken
             (
                 issuer: _configuration["Jwt:Issuer"] ?? "EcommerceApi",
-                audience: _configuration["Jwt:Audience"] ?? "EcommerceApi",
-                expires: DateTime.UtcNow.AddHours(8),
+                audience: _configuration["Jwt:Audience"] ?? "EcommerceUser",
+                expires: DateTime.UtcNow.AddMinutes(15),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey,SecurityAlgorithms.HmacSha256)
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private static string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        private ClaimsPrincipal? GetPrincipalFromExperiedToken(string token)
+        {
+            var JwtSec = _configuration["Jwt:SecretKey"] ?? "SuperSecretDefaultKeyqwertyuiopasdfghjklz";
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidAudience = _configuration["Jwt :Audience"] ?? "EcommerceUser",
+                ValidateIssuer = true,
+                ValidIssuer = _configuration["Jwt :Issuer"] ?? "EcommerceApi",
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSec)),
+                ValidateLifetime = false
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Incvalid token algorithm.");
+            }
+            return principal;
         }
 
 
