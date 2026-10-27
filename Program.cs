@@ -12,10 +12,8 @@ using Microsoft.OpenApi;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CloudinaryDotNet;
-
 var builder = WebApplication.CreateBuilder(args);
 var JwtSecret = builder.Configuration["Jwt:SecretKey"] ?? "SuperSecretDefaultKeyqwertyuiopasdfghjklz";
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -33,7 +31,6 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret))
     };
 });
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Allow", policy =>
@@ -41,12 +38,10 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:3000", "http://localhost:5137").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
     });
 });
-
 builder.Services.AddDbContext<AppDbContext>(options 
     => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentityCore<UserModel>(options 
     => { options.User.RequireUniqueEmail = true; }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
-
 builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
@@ -56,14 +51,12 @@ builder.Services.AddProblemDetails();
 builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection("CloudinarySetting"));
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "EcommerceApi", Version = "v1" });
-
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -73,7 +66,6 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Enter your JWT token in the format: Bearer <your_jwt_token>"
     });
-
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -89,11 +81,8 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
 builder.Services.AddScoped<IAuthService, AuthService>();
-
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
