@@ -7,7 +7,7 @@ using EcommerceApi.Options.Exceptions;
 
 namespace EcommerceApi.Service
 {
-    public class OrderService(AppDbContext _context) : IOrderService
+    public sealed class OrderService(AppDbContext _context) : IOrderService
     {
         public async Task<OrderResponseDto> CreateOrder(OrderDto dto, Guid UserId)
         {
@@ -25,10 +25,13 @@ namespace EcommerceApi.Service
                 };
                 decimal totalAmount = 0;
                 var orderItems = new List<OrderItemModel>();
+                var productIds = dto.Items.Select(p => p.ProductId).Distinct();
+
+                var products = await _context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
 
                 foreach (var item in dto.Items)
                 {
-                    var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
+                    var product =  products.FirstOrDefault(p => p.Id == item.ProductId);
                     if (product == null) throw new NotFoundException("Product not found");
 
                     if (product.Stock < item.Quantity) throw new BadRequestException($"Stock {product.Name} not enough");
