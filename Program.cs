@@ -36,7 +36,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Allow", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5137").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+        policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
     });
 });
 builder.Services.AddDbContext<AppDbContext>(options 
@@ -92,8 +92,9 @@ if (app.Environment.IsDevelopment())
 }
 app.UseExceptionHandler();
 
-app.UseHttpsRedirection();
-
+//app.UseHttpsRedirection();
+app.UseRouting();
+app.UseCors("Allow");
 app.UseAuthentication();
 app.UseAuthorization();
 

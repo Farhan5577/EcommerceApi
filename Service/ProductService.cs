@@ -49,7 +49,7 @@ namespace EcommerceApi.Service
                 query = query.Where(p => p.Name.ToLower().Contains(search.ToLower()));
             }
 
-            query = sortBy.ToLower() switch
+            query = sortBy?.ToLower() switch
             {
                 "price_asc" => query.OrderBy(p => p.Price),
                 "price_desc" => query.OrderByDescending(p => p.Price),

@@ -112,7 +112,7 @@ namespace EcommerceApi.Service
             (
                 issuer: _configuration["Jwt:Issuer"] ?? "EcommerceApi",
                 audience: _configuration["Jwt:Audience"] ?? "EcommerceUser",
-                expires: DateTime.UtcNow.AddMinutes(15),
+                expires: DateTimeOffset.UtcNow.AddMinutes(15).UtcDateTime,
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey,SecurityAlgorithms.HmacSha256)
             );
@@ -134,9 +134,9 @@ namespace EcommerceApi.Service
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
-                ValidAudience = _configuration["Jwt :Audience"] ?? "EcommerceUser",
+                ValidAudience = _configuration["Jwt:Audience"] ?? "EcommerceUser",
                 ValidateIssuer = true,
-                ValidIssuer = _configuration["Jwt :Issuer"] ?? "EcommerceApi",
+                ValidIssuer = _configuration["Jwt:Issuer"] ?? "EcommerceApi",
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSec)),
                 ValidateLifetime = false
