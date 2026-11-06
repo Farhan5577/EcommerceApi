@@ -87,10 +87,10 @@ Create or update the `appsettings.json` file in the root directory:
   },
   "Jwt": {
     "Issuer": "EcommerceApi",
-    "Audience": "EcommerceApiUser",
+    "Audience": "EcommerceUser",
     "Key": "YOUR_SUPER_SECRET_KEY_MINIMUM_32_CHARACTERS"
   },
-  "CloudinaryOptions": {
+  "CloudinarySetting": {
     "CloudName": "YOUR_CLOUD_NAME",
     "ApiKey": "YOUR_API_KEY",
     "ApiSecret": "YOUR_API_SECRET"
