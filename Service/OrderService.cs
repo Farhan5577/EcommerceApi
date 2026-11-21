@@ -119,10 +119,10 @@ namespace EcommerceApi.Service
                 Items = order.OrderItems.Select(oi => new OrderItemDto
                 {
                     ProductId = oi.ProductModelId,
-                    NameStore = oi.Product?.Store?.Name ?? "Unknown",
+                    NameStore = oi.Product!.Store!.Name,
                     Quantity = oi.Quantity,
-                    ProductName = oi.Product.Name,
-                    PriceAtPurchase = oi.Product.Price,
+                    ProductName = oi.Product!.Name,
+                    PriceAtPurchase = oi.Product!.Price,
 
                 }).ToList()
 

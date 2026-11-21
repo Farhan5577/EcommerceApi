@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using EcommerceApi.Options.Exceptions;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
+using System.Data;
 
 namespace EcommerceApi.Service
 {
@@ -37,14 +38,7 @@ namespace EcommerceApi.Service
             _context.Stores.Add (store);
             await _context.SaveChangesAsync ();
 
-            return new StoreResponseDto
-            {
-                Id = store.Id,
-                Name = store.Name,
-                Description = store.Description,
-                UserId = store.UserId,
-                LogoUrl = store.LogoUrl,
-            };
+            return Mapping(store);
         }
 
         public async Task<StoreResponseDto?> GetStoreByUserId(Guid userId)
@@ -52,14 +46,7 @@ namespace EcommerceApi.Service
             var store = await _context.Stores.FirstOrDefaultAsync(s => s.UserId == userId);
             if (store == null) throw new NotFoundException("Store not found!");
 
-            return new StoreResponseDto
-            {
-                Id = store.Id,
-                Name = store.Name,
-                Description = store.Description,
-                UserId = store.UserId,
-                LogoUrl = store.LogoUrl,
-            };
+            return Mapping(store);
         }
 
         public async Task<StoreResponseDto?> GetStoreById (Guid storeId)
@@ -67,13 +54,18 @@ namespace EcommerceApi.Service
             var store = await _context.Stores.FirstOrDefaultAsync(s => s.Id == storeId);
             if (store == null) throw new NotFoundException($"Store with Id {storeId} Not Found!");
 
+            return Mapping(store);
+        }
+
+        private static StoreResponseDto Mapping(StoreModel store)
+        {
             return new StoreResponseDto
             {
                 Id = store.Id,
                 Name = store.Name,
-                Description = store.Description,
+                Description = store.Description?? string.Empty,
                 UserId = store.UserId,
-                LogoUrl = store.LogoUrl,
+                LogoUrl = store.LogoUrl
             };
         }
     }
